@@ -26,8 +26,7 @@ def loadFile(ifile):
     elif 'TAUTAU' in ifile:
         channel = 'tt'
     else:
-        print 'I don\'t konw what channel this is'
-        sys.exit(0)
+        raise Exception('Input files must have MUTAU, ETAU, or TAUTAU in the provided path. You gave {}, ya goober.'.format(ifile))
 
     filename = ifile.split('/')[-1]
     print 'Loading input file...', filename
