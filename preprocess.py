@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 ## Variables used for selection. These shouldn't be normalized
 selection_vars = [
-    'cat_vbf', 'el_charge', 't1_charge', 'mu_charge', 'nbjets'
+    'cat_vbf', 'el_charge', 't1_charge', 'mu_charge', 't2_charge', 'nbjets', 'is_signal'
 ]
 
 ## Variables that could be used as NN input. These should be normalized
@@ -61,34 +61,34 @@ def main(args):
     input_files += [ifile for ifile in glob('{}/*.root'.format(args.tau_input_dir)) if args.tau_input_dir != None]
 
     ## define collections that will all be merged in the end
-    big_boi, selection_boi = pd.DataFrame(), pd.DataFrame()
-    names, leptons, isSignal, weight_boi = np.array([]), np.array([]), np.array([]), np.array([])
+    unscaled_data, selection_df = pd.DataFrame(), pd.DataFrame()
+    names, leptons, isSignal, weight_df = np.array([]), np.array([]), np.array([]), np.array([])
 
     for ifile in input_files:
         input_data, selection_data, new_name, lepton, sig, weight = loadFile(ifile)
-        big_boi = pd.concat([big_boi, input_data])  ## add data to the full set
-        selection_boi = pd.concat([selection_boi, selection_data]) ## add selection variables to full set
+        unscaled_data = pd.concat([unscaled_data, input_data])  ## add data to the full set
+        selection_df = pd.concat([selection_df, selection_data]) ## add selection variables to full set
         names = np.append(names, new_name) ## insert the name of the current sample
         isSignal = np.append(isSignal, sig) ## labels for signal/background
-        weight_boi = np.append(weight_boi, weight) ## weights scaled from 0 - 1
+        weight_df = np.append(weight_df, weight) ## weights scaled from 0 - 1
         leptons = np.append(leptons, lepton) ## lepton channel
 
     ## normalize the potential training variables
-    skinny_boi = pd.DataFrame(StandardScaler().fit_transform(big_boi.values), columns=big_boi.columns.values)
+    scaled_data = pd.DataFrame(StandardScaler().fit_transform(unscaled_data.values), columns=unscaled_data.columns.values)
 
     ## add selection variables
-    for column in selection_boi.columns:
-        skinny_boi[column] = selection_boi[column].values
+    for column in selection_df.columns:
+        scaled_data[column] = selection_df[column].values
 
     ## add other useful data
-    skinny_boi['sample_names'] = pd.Series(names)
-    skinny_boi['lepton'] = pd.Series(leptons)
-    skinny_boi['isSignal'] = pd.Series(isSignal)
-    skinny_boi['evtwt'] = pd.Series(weight_boi)
+    scaled_data['sample_names'] = pd.Series(names)
+    scaled_data['lepton'] = pd.Series(leptons)
+    scaled_data['isSignal'] = pd.Series(isSignal)
+    scaled_data['evtwt'] = pd.Series(weight_df)
 
     ## save the dataframe for later
     store = pd.HDFStore('datasets/{}.h5'.format(args.output))
-    store['df'] = skinny_boi
+    store['df'] = scaled_data
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
