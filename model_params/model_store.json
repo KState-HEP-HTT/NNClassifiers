@@ -1,1 +1,0 @@
-{"nhidden": 7, "variables": ["Q2V1", "Q2V2", "Phi", "Phi1", "costhetastar", "costheta2", "costheta1"], "model_name": "NN_njet_model", "njet": true}
